@@ -244,3 +244,19 @@ Cuboid::Cuboid(vec3 center1, vec3 center2, double width1, double width2, double 
         rect1, rect2, rect3, rect4, rect5, rect6
     };
 }
+
+Building::Building() {
+    cout << "Building created! :)" << endl;
+}
+
+Building::~Building() {
+    cout << "Building deleted! :(" << endl;
+}
+
+void Building::applyRotation() {
+
+}
+
+void Building::applyTranslation() {
+
+}

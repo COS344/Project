@@ -44,4 +44,12 @@ struct Cuboid: public Shape{
     Cuboid(vec3 center1, vec3 center2, double width1, double width2, double height1, double height2, vec4 color);
 };
 
+struct Building: public Shape{
+    public:
+        Building();
+        void applyRotation();
+        void applyTranslation();
+        ~Building();
+};
+
 #endif /*SHAPES_H*/
