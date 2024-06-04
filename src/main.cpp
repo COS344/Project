@@ -100,7 +100,11 @@ int main() {
     bool isWireframe = false;
     auto lastToggleTime = std::chrono::high_resolution_clock::now();
 
+    //For the drone, we'll add shapes to the centre of the screen 
+    //to give the illusion of a drone
+
     Shape* building = new Building();
+
     do
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -153,7 +157,7 @@ int main() {
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-        //Translation to the forwards
+        //Translation forwards
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         {
             // building->applyTranslation();
