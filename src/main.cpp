@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -8,12 +9,14 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+
 #include "shader.hpp"
 #include "shapes.h"
 
-#define timeDT std::chrono::_V2::steady_clock::time_point;
+#define timeDT std::chrono::_V2::steady_clock::time_point
 
-using namespace std;
+using namespace glm;
 using namespace std;
 
 const char *getError()
@@ -25,7 +28,7 @@ const char *getError()
 
 inline void startUpGLFW()
 {
-    glewExperimental = true; 
+    glewExperimental = true; // Needed for core profile
     if (!glfwInit())
     {
         throw getError();
@@ -34,7 +37,7 @@ inline void startUpGLFW()
 
 inline void startUpGLEW()
 {
-    glewExperimental = true; 
+    glewExperimental = true; // Needed in core profile
     if (glewInit() != GLEW_OK)
     {
         glfwTerminate();
@@ -45,27 +48,27 @@ inline void startUpGLEW()
 inline GLFWwindow *setUp()
 {
     startUpGLFW();
-    glfwWindowHint(GLFW_SAMPLES, 4);               
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); 
+    glfwWindowHint(GLFW_SAMPLES, 4);               // 4x antialiasing
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // We want OpenGL 3.3
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);           
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); 
-    GLFWwindow *window;                                            
-    window = glfwCreateWindow(1000, 1000, "Byte Brigade IT café render", NULL, NULL);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);           // To make MacOS happy; should not be needed
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // We don't want the old OpenGL
+    GLFWwindow *window;                                            // (In the accompanying source code, this variable is global for simplicity)
+    window = glfwCreateWindow(1000, 1000, "Experiment", NULL, NULL);
     if (window == NULL)
     {
         cout << getError() << endl;
         glfwTerminate();
         throw "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n";
     }
-    glfwMakeContextCurrent(window); 
+    glfwMakeContextCurrent(window); // Initialize GLEW
     startUpGLEW();
     return window;
 }
 
-int main() {
-    cout << "Hello :)" << endl;
-
+int main()
+{
+    // This is the normal setup function calls.
     GLFWwindow *window;
     try
     {
@@ -77,19 +80,26 @@ int main() {
         throw;
     }
 
-    glClearColor(0, 0.2, 0.13, 1);
+    // Here we set the background color to a shade of gray.
+    glClearColor(0.2, 0.2, 0.2, 0.2);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_NEAREST);
-    
+
+    // Here we create a VAO
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
 
+    // This is needed for sticky keys
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
+    // Here we compile and load the shaders. First we pass the vertex shader then the fragment shader.
     GLuint programID = LoadShaders("vertexShader.glsl", "fragmentShader.glsl");
 
+    timeDT lastChanged = chrono::steady_clock::now();
+
+    // Here we create two VBOs
     GLuint vertexbuffer;
     glGenBuffers(1, &vertexbuffer);
     GLuint colorbuffer;
@@ -97,33 +107,28 @@ int main() {
 
     double lastTime;
     lastTime = glfwGetTime();
-    bool isWireframe = false;
-    auto lastToggleTime = std::chrono::high_resolution_clock::now();
 
-    //For the drone, we'll add shapes to the centre of the screen 
-    //to give the illusion of a drone
-
-    Shape* building = new Building();
+    Shape *shp = new Building();
 
     do
     {
+        float currentTime = glfwGetTime();
+        float deltaTime = currentTime - lastTime;
+
+        // Here we clear the color and depth buffer bits.
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(programID);
 
         // Here we obtain the vertices and colors for the house as two dynamic arrays.
-        GLfloat *vertices;
-        GLfloat *colors;
-
-            vertices = building->toVertexArray();
-            colors = building->toColorArray();
-
-            glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat[building->numVertices()]), vertices, GL_STATIC_DRAW);
-
-            glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat[building->numColors()]), colors, GL_STATIC_DRAW);
+        GLfloat *vertices = shp->toVertexArray();
+        GLfloat *colors = shp->toColorArray();
         
         //  Here we bind the VBOs
+        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat[shp->numVertices()]), vertices, GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat[shp->numColors()]), colors, GL_STATIC_DRAW);
 
         // Here we enable the VAO and populate it.
         glEnableVertexAttribArray(0);
@@ -148,8 +153,28 @@ int main() {
             (void *)0 // array buffer offset
         );
 
-            glDrawArrays(GL_TRIANGLES, 0, building->numPoints()); // Starting from vertex 0; 3 vertices total -> 1 triangle
 
+        bool wireframeMode = false;
+
+        
+        double lastToggleTime = 0.0;
+        const double toggleDelay = 0.2;
+
+        if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) {
+            double currentTime = glfwGetTime();
+            if (currentTime - lastToggleTime > toggleDelay) {
+                // Toggle wireframe mode
+                wireframeMode = !wireframeMode;
+                lastToggleTime = currentTime;
+            }
+        }
+        // Render the object based on wireframeMode
+        if (wireframeMode) {
+            glDrawArrays(GL_LINE_LOOP, 0, shp->numPoints());
+        } else {
+            glDrawArrays(GL_TRIANGLES, 0, shp->numPoints());
+        }
+        
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
 
@@ -157,66 +182,67 @@ int main() {
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-        //Translation forwards
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        {
-            // building->applyTranslation();
-        }
-
-        //Translation backwards
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        {
-            // building->applyTranslation();
-        }
-
-        //Translation to the left
+        // Reminder: The examples use GLM but for the practicals you may not use GLM and all the matrix calculations needs to be done in the application not the shaders.
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
         {
-            // building->applyTranslation();
-        }
+            mat4x4 rotationY = mat4x4(0.0f);
+            rotationY[0].x = cos(0.01);
+            rotationY[1].y = 1;
+            rotationY[0].z = -sin(0.01);
+            rotationY[2].x = sin(0.01);
+            rotationY[2].z = cos(0.01);
+            rotationY[3].w = 1;
 
-        //Translation to the right
+            shp->applyMatrix(transpose(rotationY));
+        }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         {
-            // building->applyTranslation();
+            mat4x4 rotationY = mat4x4(0.0f);
+
+            rotationY[0].x = cos(-0.01);
+            rotationY[1].y = 1;
+            rotationY[0].z = -sin(-0.01);
+            rotationY[2].x = sin(-0.01);
+            rotationY[2].z = cos(-0.01);
+            rotationY[3].w = 1;
+
+            shp->applyMatrix(transpose(rotationY));
+        }
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        {
+            // Rotation about x-axis in an anti-clockwise direction
+            float angle = 0.01f;
+            mat4x4 rotationX = mat4x4(0.0f);
+            rotationX[0].x = 1;
+            rotationX[1].y = cos(angle);
+            rotationX[1].z = -sin(angle);
+            rotationX[2].y = sin(angle);
+            rotationX[2].z = cos(angle);
+            rotationX[3].w = 1;
+
+            shp->applyMatrix(transpose(rotationX));
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        {
+            // Rotation about x-axis in a clockwise direction
+            float angle = -0.01f; 
+            mat4x4 rotationX = mat4x4(0.0f);
+            rotationX[0].x = 1;
+            rotationX[1].y = cos(angle);
+            rotationX[1].z = -sin(angle);
+            rotationX[2].y = sin(angle);
+            rotationX[2].z = cos(angle);
+            rotationX[3].w = 1;
+
+            shp->applyMatrix(transpose(rotationX));
         }
 
-        //Rotation to the right
-        if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-        {
-            // building->applyRotation();
-        }
-
-        //Rotation to the left
-        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-        {
-            // building->applyRotation();
-        }
-
-        //Rotation upwards
-        if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
-        {
-            // building->applyRotation();
-        }
-
-        //Rotation downwards
-        if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
-        {
-            // building->applyRotation();
-        }
-    
-        delete[] vertices;
-        delete[] colors;
+        lastTime = currentTime;
+        cout << "FPS: " << 1 / deltaTime << endl;
 
     } while (glfwGetKey(window, GLFW_KEY_SPACE) != GLFW_PRESS &&
              glfwWindowShouldClose(window) == 0);
-    
-    delete building;
-    glDeleteVertexArrays(1, &VertexArrayID);
-    glDeleteBuffers(1, &vertexbuffer);
-    glDeleteBuffers(1, &colorbuffer);
-    glDeleteProgram(programID);
-    glfwTerminate();
 
-    return 0;
+    delete shp;
 }
+
