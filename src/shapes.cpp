@@ -1,3 +1,4 @@
+
 #include "shapes.h"
 
 Shape::~Shape()
@@ -402,6 +403,39 @@ Building::Building(){
 
     shapes[2] = new Boxes(4, centerD, heightD, widthD, lengthD, colorD);
 
+}
+
+Cuboid::Cuboid(vec3 center1, vec3 center2, double width1, double width2, double height1, double height2, vec4 colour){
+    //Two rectangles, at center1 and center2, with width1 and height1 being for center1, and width2 and height2 being for center2
+    Rectangle *rect1 = new Rectangle(center1 + vec3(width1 / 2.0, height1 / 2.0, 0.0), center1 + vec3(-width1 / 2.0, height1 / 2.0, 0.0), center1 + vec3(width1 / 2.0, -height1 / 2.0, 0.0), center1 + vec3(-width1 / 2.0, -height1 / 2.0, 0.0), colour);
+    Rectangle *rect2 = new Rectangle(center2 + vec3(width2 / 2.0, height2 / 2.0, 0), center2 + vec3(-width2 / 2.0, height2 / 2.0, 0.0), center2 + vec3(width2 / 2.0, -height2 / 2.0, 0.0), center2 + vec3(-width2 / 2.0, -height2 / 2.0, 0.0), colour);
     
+    //Connect the two rectangles with 4 rectangles
+    Rectangle *rect3 = new Rectangle(center1 + vec3(width1 / 2.0, height1 / 2.0, 0.0), center2 + vec3(width2 / 2.0, height2 / 2.0, 0.0), center1 + vec3(width1 / 2.0, -height1 / 2.0, 0.0), center2 + vec3(width2 / 2.0, -height2 / 2.0, 0.0), colour);
+    Rectangle *rect4 = new Rectangle(center1 + vec3(-width1 / 2.0, height1 / 2.0, 0.0), center2 + vec3(-width2 / 2.0, height2 / 2.0, 0.0), center1 + vec3(-width1 / 2.0, -height1 / 2.0, 0.0), center2 + vec3(-width2 / 2.0, -height2 / 2.0, 0.0), colour);
+    Rectangle *rect5 = new Rectangle(center1 + vec3(width1 / 2.0, height1 / 2.0, 0.0), center2 + vec3(width2 / 2.0, height2 / 2.0, 0.0), center1 + vec3(-width1 / 2.0, height1 / 2.0, 0.0), center2 + vec3(-width2 / 2.0, height2 / 2.0, 0.0), colour);
+    Rectangle *rect6 = new Rectangle(center1 + vec3(width1 / 2.0, -height1 / 2.0, 0.0), center2 + vec3(width2 / 2.0, -height2 / 2.0, 0.0), center1 + vec3(-width1 / 2.0, -height1 / 2.0, 0.0), center2 + vec3(-width2 / 2.0, -height2 / 2.0, 0.0), colour);
+
+    numShapes = 6;
+    shapes = new Shape *[numShapes]
+    {
+        rect1, rect2, rect3, rect4, rect5, rect6
+    };
+}
+
+Building::Building() {
+    cout << "Building created! :)" << endl;
+}
+
+Building::~Building() {
+    cout << "Building deleted! :(" << endl;
+}
+
+void Building::applyRotation() {
+
+}
+
+void Building::applyTranslation() {
+
 
 }

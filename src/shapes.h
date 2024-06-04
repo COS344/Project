@@ -1,3 +1,4 @@
+
 #ifndef SHAPES_H
 #define SHAPES_H
 
@@ -49,6 +50,9 @@ struct Boxes: public Shape{
 
 struct Building: public Shape{
     Building();
+    void applyRotation();
+    void applyTranslation();
+    ~Building();
 };
 
 #endif /*SHAPES_H*/
