@@ -1,6 +1,6 @@
 SRC_DIR = ./src
 TARGET = main
-files = shader.cpp main.cpp shapes.cpp building.cpp glad.c
+files = shader.cpp main.cpp shapes.cpp glad.c
 
 all: clean compile run
 
