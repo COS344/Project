@@ -17,8 +17,6 @@ struct Shape{
 
     virtual void applyMatrix(mat3x3);
     virtual GLfloat* toVertexArray();
-    virtual GLfloat* toWireframeArray();
-    virtual GLfloat* toWireframeColorArray();
     virtual GLfloat* toColorArray();
     virtual int numPoints();
 
