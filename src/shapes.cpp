@@ -1,5 +1,6 @@
 
 #include "shapes.h"
+#include <glm/trigonometric.hpp>
 
 Shape::~Shape()
 {
@@ -213,40 +214,129 @@ Boxes::Boxes(int numBoxes, vec3 *centers, double *heights, double *widths, doubl
     }
 }
 
+Prisma::Prisma(vec3 center, double height, double width, double length, vec3 color)
+{
+    vec3 topPlane = center + vec3( 0.0,  height / 2.0, 0.0);
+    vec3 bottomPlane = center - vec3( 0,  height / 2, 0);
+    vec3 leftPlane = center - vec3(width / 2, 0, 0);
+    vec3 rightPlane = center + vec3(width / 2, 0, 0);
+    vec3 nearPlane = center - vec3( 0, 0, length / 2);
+    vec3 farPlane = center + vec3( 0, 0, length / 2);
+
+    vec3 nearLeftTop = nearPlane + leftPlane + topPlane;
+    vec3 nearRightTop = nearPlane + rightPlane + topPlane;
+    vec3 nearLeftBottom = nearPlane + leftPlane + bottomPlane;
+    vec3 nearRightBottom = nearPlane + rightPlane + bottomPlane;
+
+    vec3 farLeftTop = farPlane + leftPlane + topPlane;
+    vec3 farRightTop = farPlane + rightPlane + topPlane;
+    vec3 farLeftBottom = farPlane + leftPlane + bottomPlane;
+    vec3 farRightBottom = farPlane + rightPlane + bottomPlane;
+
+    vec3 topPlaneFrontCenter = nearLeftTop;
+    vec3 topPlaneBackCenter = farLeftTop;
+
+
+    Triangle *front = new Triangle(topPlaneFrontCenter, nearLeftBottom, nearRightBottom, color);
+    Triangle *back = new Triangle(topPlaneBackCenter, farLeftBottom, farRightBottom, color);
+    Rectangle *left = new Rectangle(topPlaneBackCenter, topPlaneFrontCenter, farLeftBottom, nearLeftBottom, color);
+    Rectangle *right = new Rectangle(topPlaneFrontCenter, topPlaneBackCenter, nearRightBottom, farRightBottom, color);
+    Rectangle *bottom = new Rectangle(nearLeftBottom, nearRightBottom, farLeftBottom, farRightBottom, color);
+
+    numShapes = 5;
+    shapes = new Shape *[numShapes]
+    {
+        bottom, front, back, left, right
+    };
+}
+
+Radar1::Radar1(vec3 center, double height, double width, double length, vec3 color)
+{
+    vec3 topPlane = center + vec3(0.0,  height / 2.0, 0.0);
+    vec3 bottomPlane = center - vec3( 0.0,  height / 2.0, 0.0);
+    vec3 leftPlane = center - vec3(width / 2.0, 0.0, 0.0);
+    vec3 rightPlane = center + vec3(width / 2.0, 0.0, 0.0);
+    vec3 nearPlane = center - vec3(0.0, 0.0, length / 2.0);
+    vec3 farPlane = center + vec3(0.0, 0.0, length / 2.0);
+
+    vec3 nearLeftTop = nearPlane + leftPlane + topPlane;
+    vec3 nearRightTop = nearPlane + rightPlane + topPlane;
+    vec3 nearLeftBottom = nearPlane + leftPlane + bottomPlane;
+    vec3 nearRightBottom = nearPlane + rightPlane + bottomPlane;
+
+    vec3 farLeftTop = farPlane + leftPlane + topPlane;
+    vec3 farRightTop = farPlane + rightPlane + topPlane;
+    vec3 farLeftBottom = farPlane + leftPlane + bottomPlane;
+    vec3 farRightBottom = farPlane + rightPlane + bottomPlane;
+
+    vec3 topPlaneCenter = farLeftTop;
+
+    Triangle *front = new Triangle(topPlaneCenter, nearLeftBottom, nearRightBottom, color);
+    Triangle *back = new Triangle(topPlaneCenter, farLeftBottom, farRightBottom, color);
+    Triangle *left = new Triangle(topPlaneCenter, farLeftBottom, nearLeftBottom, color);
+    Triangle *right = new Triangle(topPlaneCenter, nearRightBottom, farRightBottom, color);
+    Rectangle *bottom = new Rectangle(nearLeftBottom, nearRightBottom, farLeftBottom, farRightBottom, color);
+
+    numShapes = 5;
+    shapes = new Shape *[numShapes]
+    {
+        bottom, front, back, left, right
+    };
+}
+
 Building::Building(){
     
-    numShapes = 3;
+    numShapes = 14;
     shapes = new Shape *[numShapes];
+    int scalingFactor = 10;
 
     // East Walls
-    vec3 centers[3] = {
+    vec3 centers[4] = {
         vec3(0, 0, 0),
         vec3(0.04, 0, 0.18),
-        vec3(0.04, 0, -0.18)};
-    double heights[3] = {
-        0.5, // mid wall height
-        0.5, // left wall front side
-        0.5 // right wall front side
-    };
-    double widths[3] = {
-        0.5,
-        0.25,
-        0.25,
-    };
-    double lengths[3] = {
-        0.6,
-        0.15,
-        0.15,
-    };
-    vec3 colors[3] = {
-        vec3(0, 0, 1),
-        vec3(1, 0, 0),
-        vec3(0, 1, 0)};
+        vec3(0.04, 0, -0.18),
+        vec3(-0.875, 0.0, 0.0)};
 
-    shapes[0] = new Boxes(3, centers, heights, widths, lengths, colors);
+    for (int i = 0; i < 4; i++) {
+        centers[i].x *= scalingFactor;
+        centers[i].y *= scalingFactor;
+        centers[i].z *= scalingFactor;
+    }
+
+    double heights[4] = {
+        0.5 * scalingFactor, // mid wall height
+        0.5 * scalingFactor, // left wall front side
+        0.5 * scalingFactor, // right wall front side
+        0.5 * scalingFactor
+    };
+
+    double widths[4] = {
+        0.5 * scalingFactor,
+        0.25 * scalingFactor,
+        0.25 * scalingFactor,
+        0.25 * scalingFactor,
+    };
+
+    double lengths[4] = {
+        0.6 * scalingFactor,
+        0.15 * scalingFactor,
+        0.15 * scalingFactor,
+        1.3 * scalingFactor,
+    };
+
+    vec3 colors[4] = {
+        vec3(0.5, 0.5, 0.5),
+        vec3(0.5, 0.5, 0.5),
+        vec3(0.5, 0.5, 0.5),
+        vec3(0.5, 0.5, 0.5),
+        };
+
+    shapes[0] = new Boxes(4, centers, heights, widths, lengths, colors);
 
     // Left front side windows and right side
+
     vec3 centersw[20] = {
+        //left side
         vec3(0.04, 0.065, 0.14),
         vec3(0.04, 0.04, 0.14),
         vec3(0.04, 0.015, 0.14),
@@ -270,102 +360,114 @@ Building::Building(){
         vec3(0.04, -0.01, -0.115),
         vec3(0.04, -0.03, -0.115)};
 
+    for (int i = 0; i < 20; i++) {
+        centersw[i].x *= scalingFactor;
+        centersw[i].y *= scalingFactor;
+        centersw[i].z *= scalingFactor;
+    }
+
     double heightsw[20] = {
-        0.10, 
-        0.05, 
-        0.10,
-        0.05,
-        0.08,
-        0.10, 
-        0.05, 
-        0.10,
-        0.05,
-        0.08,
+        0.10 * scalingFactor, 
+        0.05 * scalingFactor, 
+        0.10 * scalingFactor,
+        0.05 * scalingFactor,
+        0.08 * scalingFactor,
+        0.10 * scalingFactor, 
+        0.05 * scalingFactor, 
+        0.10 * scalingFactor,
+        0.05 * scalingFactor,
+        0.08 * scalingFactor,
 
         //right side
-        0.10, 
-        0.05, 
-        0.10,
-        0.05,
-        0.08,
-        0.10, 
-        0.05, 
-        0.10,
-        0.05,
-        0.08
+        0.10 * scalingFactor, 
+        0.05 * scalingFactor, 
+        0.10 * scalingFactor,
+        0.05 * scalingFactor,
+        0.08 * scalingFactor,
+        0.10 * scalingFactor, 
+        0.05 * scalingFactor, 
+        0.10 * scalingFactor,
+        0.05 * scalingFactor,
+        0.08 * scalingFactor
     };
+    
     double widthsw[20] = {
-        0.01,
-        0.01,
-        0.01,
-        0.01,
-        0.01,
-        0.01,
-        0.01,
-        0.01,
-        0.01,
-        0.01,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
 
         //right side
 
-        0.01,
-        0.01,
-        0.01,
-        0.01,
-        0.01,
-        0.01,
-        0.01,
-        0.01,
-        0.01,
-        0.01
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor
     };
+
     double lengthsw[20] = {
-        0.08,
-        0.08,
-        0.08,
-        0.08,
-        0.08,
-        0.08,
-        0.08,
-        0.08,
-        0.08,
-        0.08,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
 
         //right side
-        0.08,
-        0.08,
-        0.08,
-        0.08,
-        0.08,
-        0.08,
-        0.08,
-        0.08,
-        0.08,
-        0.08
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor
     };
+
+    //Windoewwwws
     vec3 colorsw[20] = {
-        vec3(0, 1, 0),
-        vec3(0, 1, 1),
-        vec3(0, 1, 0),
-        vec3(0, 1, 1),
-        vec3(0, 0, 0),
-        vec3(0, 1, 0),
-        vec3(0, 1, 1),
-        vec3(0, 1, 0),
-        vec3(0, 1, 1),
-        vec3(0, 0, 0),
+        //left side
+        vec3(0.75, 0.75, 1.0),
+        vec3(0.75, 0.75, 1.0),
+        vec3(0.75, 0.75, 1.0),
+        vec3(0.75, 0.75, 1.0),
+        vec3(0.75, 0.75, 1.0),
+        vec3(0.75, 0.75, 1.0),
+        vec3(0.75, 0.75, 1.0),
+        vec3(0.75, 0.75, 1.0),
+        vec3(0.75, 0.75, 1.0),
+        vec3(0.75, 0.75, 1.0),
+        
         
         //right side
-        vec3(1, 1, 0),
-        vec3(1, 1, 1),
-        vec3(1, 1, 0),
-        vec3(1, 1, 1),
-        vec3(0, 0, 0),
-        vec3(0, 1, 0),
-        vec3(0, 1, 1),
-        vec3(0, 1, 0),
-        vec3(0, 1, 1),
-        vec3(0, 0, 0)};
+        vec3(0.75, 0.75, 1.0),
+        vec3(0.75, 0.75, 1.0),
+        vec3(0.75, 0.75, 1.0),
+        vec3(0.75, 0.75, 1.0),
+        vec3(0.75, 0.75, 1.0),
+        vec3(0.75, 0.75, 1.0),
+        vec3(0.75, 0.75, 1.0),
+        vec3(0.75, 0.75, 1.0),
+        vec3(0.75, 0.75, 1.0),
+        vec3(0.75, 0.75, 1.0)};
 
     shapes[1] = new Boxes(20, centersw, heightsw, widthsw, lengthsw, colorsw);
 
@@ -377,55 +479,241 @@ Building::Building(){
         vec3(0.04, -0.064, 0.115),
         vec3(0.04, -0.064, -0.14),
         vec3(0.04, -0.064, -0.115)};
+
+    for (int i = 0; i < 4; i++) {
+        centerD[i].x *= scalingFactor;
+        centerD[i].y *= scalingFactor;
+        centerD[i].z *= scalingFactor;
+    }
+
     double heightD[4] = {
-        0.12, 
-        0.12, 
-        0.12,
-        0.12
+        0.12 * scalingFactor, 
+        0.12 * scalingFactor, 
+        0.12 * scalingFactor,
+        0.12 * scalingFactor
     };
     double widthD[4] = {
-        0.01,
-        0.01,
-        0.01,
-        0.01
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor,
+        0.01 * scalingFactor
     };
     double lengthD[4] = {
-        0.08,
-        0.08,
-        0.08,
-        0.08
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor,
+        0.08 * scalingFactor
     };
+
     vec3 colorD[4] = {
-        vec3(1, 0.5, 0.5),
-        vec3(1, 1, 1),
-        vec3(1, 0.5, 0.5),
-        vec3(1, 1, 1)};
+        vec3(0.9, 0.9, 0.9),
+        vec3(0.9, 0.9, 0.9),
+        vec3(0.9, 0.9, 0.9),
+        vec3(1.0, 1.0, 1.0)
+    };
 
     shapes[2] = new Boxes(4, centerD, heightD, widthD, lengthD, colorD);
 
-}
-
-Cuboid::Cuboid(vec3 center1, vec3 center2, double width1, double width2, double height1, double height2, vec4 colour){
-    //Two rectangles, at center1 and center2, with width1 and height1 being for center1, and width2 and height2 being for center2
-    Rectangle *rect1 = new Rectangle(center1 + vec3(width1 / 2.0, height1 / 2.0, 0.0), center1 + vec3(-width1 / 2.0, height1 / 2.0, 0.0), center1 + vec3(width1 / 2.0, -height1 / 2.0, 0.0), center1 + vec3(-width1 / 2.0, -height1 / 2.0, 0.0), colour);
-    Rectangle *rect2 = new Rectangle(center2 + vec3(width2 / 2.0, height2 / 2.0, 0), center2 + vec3(-width2 / 2.0, height2 / 2.0, 0.0), center2 + vec3(width2 / 2.0, -height2 / 2.0, 0.0), center2 + vec3(-width2 / 2.0, -height2 / 2.0, 0.0), colour);
-    
-    //Connect the two rectangles with 4 rectangles
-    Rectangle *rect3 = new Rectangle(center1 + vec3(width1 / 2.0, height1 / 2.0, 0.0), center2 + vec3(width2 / 2.0, height2 / 2.0, 0.0), center1 + vec3(width1 / 2.0, -height1 / 2.0, 0.0), center2 + vec3(width2 / 2.0, -height2 / 2.0, 0.0), colour);
-    Rectangle *rect4 = new Rectangle(center1 + vec3(-width1 / 2.0, height1 / 2.0, 0.0), center2 + vec3(-width2 / 2.0, height2 / 2.0, 0.0), center1 + vec3(-width1 / 2.0, -height1 / 2.0, 0.0), center2 + vec3(-width2 / 2.0, -height2 / 2.0, 0.0), colour);
-    Rectangle *rect5 = new Rectangle(center1 + vec3(width1 / 2.0, height1 / 2.0, 0.0), center2 + vec3(width2 / 2.0, height2 / 2.0, 0.0), center1 + vec3(-width1 / 2.0, height1 / 2.0, 0.0), center2 + vec3(-width2 / 2.0, height2 / 2.0, 0.0), colour);
-    Rectangle *rect6 = new Rectangle(center1 + vec3(width1 / 2.0, -height1 / 2.0, 0.0), center2 + vec3(width2 / 2.0, -height2 / 2.0, 0.0), center1 + vec3(-width1 / 2.0, -height1 / 2.0, 0.0), center2 + vec3(-width2 / 2.0, -height2 / 2.0, 0.0), colour);
-
-    numShapes = 6;
-    shapes = new Shape *[numShapes]
-    {
-        rect1, rect2, rect3, rect4, rect5, rect6
+    //Floor :)
+    vec3 fcenters[1] = {
+        vec3(-4.0, -0.853, 0)
     };
+
+    double fheights[1] = {
+        0.1 
+    };
+
+    double fwidths[1] = {
+        3.0 * scalingFactor
+    };
+
+    double flengths[1] = {
+        1.3 * scalingFactor
+    };
+
+    vec3 fcolors[1] = {
+        vec3(0.2, 0.2, 0.2),
+    };
+
+    shapes[3] = new Boxes(1, fcenters, fheights, fwidths, flengths, fcolors);
+
+    //Walls - North and south
+    vec3 ncenters[2] = {
+        vec3(-0.4, 0, -0.221),
+        vec3(-0.4, 0, 0.221),
+    };
+
+
+    for (int i = 0; i < 2; i++) {
+        ncenters[i].x *= scalingFactor;
+        ncenters[i].y *= scalingFactor;
+        ncenters[i].z *= scalingFactor;
+    }
+
+    double nheights[2] = {
+        0.5 * scalingFactor, // mid wall height
+        0.5 * scalingFactor, // left wall front side
+    };
+
+    double nwidths[2] = {
+        2.75 * scalingFactor,
+        2.75 * scalingFactor,
+    };
+
+    double nlengths[2] = {
+        0.1 * scalingFactor,
+        0.1 * scalingFactor,
+    };
+
+    vec3 ncolors[2] = {
+        vec3(0.5, 0.5, 0.5),
+        vec3(0.5, 0.5, 0.5),
+        };
+
+    shapes[4] = new Boxes(2, ncenters, nheights, nwidths, nlengths, ncolors);
+    shapes[5] = new Prisma(vec3(-1.95, 0.5, 4.0), 0.125 * scalingFactor, 0.0625 * scalingFactor, 2.75 * scalingFactor, vec3(0.5, 0.5, 0.5));
+    shapes[6] = new Prisma(vec3(-1.95, 0.5, -4.0), 0.125 * scalingFactor, 0.0625 * scalingFactor, 2.75 * scalingFactor, vec3(0.5, 0.5, 0.5));
+            
+            // Rotation about x-axis in an anti-clockwise direction
+            float angle = glm::radians(90.0f);
+            mat4x4 rotationY = mat4x4(0.0f);
+            rotationY[0].x = cos(angle);
+            rotationY[1].y = 1;
+            rotationY[0].z = -sin(angle);
+            rotationY[2].x = sin(angle);
+            rotationY[2].z = cos(angle);
+            rotationY[3].w = 1;
+
+            shapes[5]->applyMatrix(transpose(rotationY));
+
+            float angle2 = glm::radians(-90.0f);
+            mat4x4 rotationY2 = mat4x4(0.0f);
+            rotationY2[0].x = cos(angle2);
+            rotationY2[1].y = 1;
+            rotationY2[0].z = -sin(angle2);
+            rotationY2[2].x = sin(angle2);
+            rotationY2[2].z = cos(angle2);
+            rotationY2[3].w = 1;
+
+            shapes[6]->applyMatrix(transpose(rotationY2));
+
+    shapes[7] = new Prisma(vec3(-1.95, -0.25, 4.0), 0.125 * scalingFactor, 0.0625 * scalingFactor, 2.75 * scalingFactor, vec3(0.5, 0.5, 0.5));
+    shapes[8] = new Prisma(vec3(-1.95, -0.25, -4.0), 0.125 * scalingFactor, 0.0625 * scalingFactor, 2.75 * scalingFactor, vec3(0.5, 0.5, 0.5));
+            
+            // Rotation about x-axis in an anti-clockwise direction
+            float angle3 = glm::radians(90.0f);
+            mat4x4 rotationY3 = mat4x4(0.0f);
+            rotationY3[0].x = cos(angle3);
+            rotationY3[1].y = 1;
+            rotationY3[0].z = -sin(angle3);
+            rotationY3[2].x = sin(angle3);
+            rotationY3[2].z = cos(angle3);
+            rotationY3[3].w = 1;
+
+            shapes[7]->applyMatrix(transpose(rotationY3));
+
+            float angle4 = glm::radians(-90.0f);
+            mat4x4 rotationY4 = mat4x4(0.0f);
+            rotationY4[0].x = cos(angle4);
+            rotationY4[1].y = 1;
+            rotationY4[0].z = -sin(angle4);
+            rotationY4[2].x = sin(angle4);
+            rotationY4[2].z = cos(angle4);
+            rotationY4[3].w = 1;
+
+            shapes[8]->applyMatrix(transpose(rotationY4));
+
+    //Box
+    shapes[9] = new Box(vec3(-3.75, 1.2, 0.0), 0.01 * scalingFactor, 3 * scalingFactor, 0.3 * scalingFactor, vec3(0.9, 0.9, 0.9));
+    shapes[10] = new Box(vec3(-3.75, 1.15, 0.0), 0.01 * scalingFactor, 3 * scalingFactor, 0.3 * scalingFactor, vec3(0.9, 0.9, 0.9));
+    shapes[11] = new Box(vec3(-3.75, 1.00, 0.0), 0.01 * scalingFactor, 3 * scalingFactor, 0.3 * scalingFactor, vec3(0.9, 0.9, 0.9));
+    shapes[12] = new Box(vec3(-3.75, 1.0, 0.0), 0.01 * scalingFactor, 3 * scalingFactor, 0.3 * scalingFactor, vec3(0.9, 0.9, 0.9));
+    shapes[13] = new Box(vec3(-3.75, 1.15, 0.0), 0.01 * scalingFactor, 3 * scalingFactor, 0.3 * scalingFactor, vec3(0.9, 0.9, 0.9));
+
+    float angle5 = glm::radians(10.0f);
+    mat4x4 rotationX = mat4x4(0.0f);
+    rotationX[0].x = 1;
+    rotationX[1].y = cos(angle5);
+    rotationX[1].z = -sin(angle5);
+    rotationX[2].y = sin(angle5);
+    rotationX[2].z = cos(angle5);
+    rotationX[3].w = 1;
+
+    shapes[10]->applyMatrix(transpose(rotationX));
+    // shapes[11]->applyMatrix(transpose());
+    // shapes[12]->applyMatrix(transpose());
+
+    float angle6 = glm::radians(10.0f);
+    mat4x4 rotationX2 = mat4x4(0.0f);
+    rotationX2[0].x = 1;
+    rotationX2[1].y = cos(-angle6);
+    rotationX2[1].z = -sin(-angle6);
+    rotationX2[2].y = sin(-angle6);
+    rotationX2[2].z = cos(-angle6);
+    rotationX2[3].w = 1;
+    shapes[13]->applyMatrix(transpose(rotationX2));
+
+    mat4x4 translationZ = mat4x4(0.0f);
+    translationZ[0].x = 1;
+    translationZ[1].y = 1;
+    translationZ[2].z = 1;
+    translationZ[3].w = 1;
+    translationZ[2].w = 2.25f; 
+    shapes[10]->applyMatrix(transpose(translationZ));
+
+    // shapes[11]->applyMatrix(transpose());
+    // shapes[12]->applyMatrix(transpose());
+
+    mat4x4 translationZ2 = mat4x4(0.0f);
+    translationZ2[0].x = 1;
+    translationZ2[1].y = 1;
+    translationZ2[2].z = 1;
+    translationZ2[3].w = 1;
+    translationZ2[2].w = -2.25f; 
+    shapes[13]->applyMatrix(transpose(translationZ2));
+
+    float angle7 = glm::radians(20.0f);
+    mat4x4 rotationX3 = mat4x4(0.0f);
+    rotationX3[0].x = 1;
+    rotationX3[1].y = cos(angle7);
+    rotationX3[1].z = -sin(angle7);
+    rotationX3[2].y = sin(angle7);
+    rotationX3[2].z = cos(angle7);
+    rotationX3[3].w = 1;
+    
+
+    shapes[11]->applyMatrix(transpose(rotationX3));
+
+    float angle8 = glm::radians(20.0f);
+    mat4x4 rotationX4 = mat4x4(0.0f);
+    rotationX4[0].x = 1;
+    rotationX4[1].y = cos(-angle8);
+    rotationX4[1].z = -sin(-angle8);
+    rotationX4[2].y = sin(-angle8);
+    rotationX4[2].z = cos(-angle8);
+    rotationX4[3].w = 1;
+
+    shapes[12]->applyMatrix(transpose(rotationX4));
+
+
+    mat4x4 translationZ3 = mat4x4(0.0f);
+    translationZ3[0].x = 1;
+    translationZ3[1].y = 1;
+    translationZ3[2].z = 1;
+    translationZ3[3].w = 1;
+    translationZ3[2].w = 4.0f; 
+    shapes[11]->applyMatrix(transpose(translationZ3));
+
+    mat4x4 translationZ4 = mat4x4(0.0f);
+    translationZ4[0].x = 1;
+    translationZ4[1].y = 1;
+    translationZ4[2].z = 1;
+    translationZ4[3].w = 1;
+    translationZ4[2].w = -4.0f; 
+    shapes[12]->applyMatrix(transpose(translationZ4));
 }
 
-Building::Building() {
-    cout << "Building created! :)" << endl;
-}
+
 
 Building::~Building() {
     cout << "Building deleted! :(" << endl;

@@ -55,4 +55,14 @@ struct Building: public Shape{
     ~Building();
 };
 
+struct Radar1: public Shape{
+    Radar1(vec3 center, double height, double width, double length, vec3 color);
+    ~Radar1();
+};
+
+struct Prisma: public Shape {
+    Prisma(vec3 center, double height, double width, double length, vec3 color);
+    ~Prisma();
+};
+
 #endif /*SHAPES_H*/
